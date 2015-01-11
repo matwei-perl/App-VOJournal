@@ -1,0 +1,7 @@
+.mtn-ignore
+MANIFEST
+MANIFEST.SKIP.bak
+MANIFEST.bak
+META.json
+META.yml
+Makefile.PL

@@ -1,0 +1,10 @@
+Revision history for App-VOJournal
+
+v0.1.0	2015-01-10/18:36
+	This does the basic things:
+	- create the necessary directories
+	- open journal file with vimoutliner
+
+0.01    1015-01-10/11:43
+        First version, not released on an unsuspecting world.
+
