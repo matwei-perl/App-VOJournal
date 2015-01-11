@@ -1,7 +1,12 @@
-.mtn-ignore
+App-VOJournal-v[0-9]*
+Build
+_build
+Makefile
+Makefile.PL
 MANIFEST
-MANIFEST.SKIP.bak
 MANIFEST.bak
+MANIFEST.SKIP.bak
 META.json
 META.yml
-Makefile.PL
+MYMETA.json
+MYMETA.yml

@@ -1,10 +1,12 @@
 package App::VOJournal;
 
-# vim: set sw=4 ts=4:
+# vim: set sw=4 ts=4 tw=76 et ai si:
 
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
+
+use Getopt::Long qw(GetOptionsFromArray);
 
 =head1 NAME
 
@@ -12,17 +14,15 @@ App::VOJournal - The great new App::VOJournal!
 
 =head1 VERSION
 
-Version 0.1.0
+Version 0.2.0
 
 =cut
 
-use version; our $VERSION = qv('0.1.0');
+use version; our $VERSION = qv('0.2.0');
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
+Open a file in vimoutliner to write a journal
 
     use App::VOJournal;
 
@@ -30,27 +30,30 @@ Perhaps a little code snippet.
 
 or, on the command line
 
-  perl -MApp::VOJournal -e App::VOJournal->run
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+    perl -MApp::VOJournal -e App::VOJournal->run
 
 =head1 SUBROUTINES/METHODS
 
 =head2 run
 
+This is the only function you need to use this Module. It parses the command
+line and determines the date for which you want to write a journal entry.
+Then it makes sure all necessary directories are created and starts
+vimoutliner with the journal file for that date.
+
+    use App::VOJournal;
+
+    App::VOJournal->run;
+
 =cut
 
 sub run {
-    my $basedir = qq($ENV{HOME}/journal);
-    my $vim = 'vim';
+	my $opt = _initialize(@ARGV);
 
-    my ($day,$month,$year) = (localtime)[3,4,5];
+	my $basedir = $opt->{basedir};
+    my $vim     = $opt->{vim};
 
-    $year += 1900;
-    $month += 1;
+    my ($day,$month,$year) = _determine_date($opt);
 
     my $path = sprintf("%s/%4.4d/%2.2d/%4.4d%2.2d%2.2d.otl",
                        $basedir, $year, $month, $year, $month, $day);
@@ -58,6 +61,69 @@ sub run {
     system($vim, $path);
     return $?;
 } # run()
+
+# _determine_date($opt)
+#
+# Determines the date respecting the given options.
+#
+sub _determine_date {
+    my ($opt) = @_;
+    my ($day,$month,$year) = (localtime)[3,4,5];
+    $year += 1900;
+    $month += 1;
+
+    if (my $od = $opt->{date}) {
+        if ($od =~ /^\d{1,2}$/) {
+            $day = $od;
+        }
+        elsif ($od =~ /^(\d{1,2})(\d{2})$/) {
+            $month = $1;
+            $day   = $2;
+        }
+        elsif ($od =~ /^(\d{4})(\d{2})(\d{2})$/) {
+            $year  = $1;
+            $month = $2;
+            $day   = $3;
+        }
+    }
+
+    return ($day,$month,$year);
+} # _determine_date()
+
+=head1 COMMANDLINE OPTIONS
+
+=head2 --date [YYYY[MM]]DD
+
+Use a different date as today.
+
+One or two digits change the day in the current month.
+
+Three or four digits change the day and month in the current year.
+
+Eight digits change day, month and year.
+
+The program will not test for a valid date. That means, if you specify
+'--date 0230' on the command line, the file for February 30th this year
+would be opened.
+
+=cut
+
+# _initialize(@ARGV)
+#
+# Parse the command line and initialize the program
+#
+sub _initialize {
+	my @argv = @_;
+	my $opt = {
+        'basedir'   => qq($ENV{HOME}/journal),
+        'vim'       => 'vim',
+	};
+    my @optdesc = (
+        'date=i',
+    );
+    GetOptionsFromArray(\@argv,$opt,@optdesc);
+	return $opt;
+} # _initialize()
 
 # _make_dir($path)
 #

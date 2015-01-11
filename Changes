@@ -1,5 +1,9 @@
 Revision history for App-VOJournal
 
+v0.2.0	2015-01-11/15:15
+	- command line option '-date [[YYYY[MM]]DD' to use another date
+	  than today
+
 v0.1.0	2015-01-10/18:36
 	This does the basic things:
 	- create the necessary directories
