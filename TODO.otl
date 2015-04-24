@@ -1,0 +1,18 @@
+[_] % bring forward empty checkboxes
+	: Before the start of vim look if there are older files, if so open the
+	: most recent and copy empty checkboxes to the new file.
+	[_] read a vimoutliner file
+		[_] method
+		[_] test
+	[_] write a vimoutliner file
+		[_] method
+		[_] test
+	[_] identify empty checkboxes
+		[_] method
+		[_] test
+	[_] selectively write the vimoutliner file
+		[_] method
+		[_] test
+	[_] find the most recent older file
+		[_] method
+		[_] test
