@@ -1,4 +1,5 @@
 App-VOJournal-v[0-9]*
+blib
 Build
 _build
 Makefile
