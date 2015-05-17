@@ -89,6 +89,25 @@ sub read_file {
     return;
 } # read_file()
 
+=head2 write_file
+
+Writes a vimoutliner file.
+
+    $votl->write_file( $filename );
+
+=cut
+
+sub write_file {
+    my ($self,$filename) = @_;
+
+    if (open my $output, '>', $filename) {
+        foreach my $object (@{$self->{objects}}) {
+            _write_object($object,0,$output);
+        }
+        close $output;
+    }
+} # write_file()
+
 sub _add_something {
     my ($self,$tabs,$newobject) = @_;
     my $indent = length $tabs;
@@ -115,6 +134,16 @@ sub _descend_objects {
     }
     return $objects;
 } # _descend_objects()
+
+sub _write_object {
+    my ($object,$indent,$outfh) = @_;
+
+    print $outfh "\t" x $indent, $object->{type}, $object->{value}, "\n";
+
+    foreach my $co (@{$object->{children}}) {
+        _write_object($co,$indent + 1,$outfh);
+    }
+} # _write_object()
 
 1;
 # __END__
