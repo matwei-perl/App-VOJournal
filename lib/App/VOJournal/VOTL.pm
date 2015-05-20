@@ -72,6 +72,13 @@ sub read_file {
                     value => $3
                 });
             }
+            elsif (/^(\t*)(\[[_X]\])(.*)$/) {
+                $self->_add_something($1, {
+                    children => [],
+                    type => $2,
+                    value => $3
+                });
+            }
             elsif (/^(\t*)([^\t].*)$/) {
                 $self->_add_something($1, {
                     children => [],
@@ -115,6 +122,12 @@ sub _add_something {
     push @$objects, $newobject;
 } # _add_something()
 
+sub _checked_box {
+    my ($object) = @_;
+
+    return ($object->{type} =~ /^\[X\]$/);
+} # _checked_box()
+
 sub _descend_objects {
     my ($self,$indent) = @_;
     my $objects = $self->{objects};
@@ -134,6 +147,12 @@ sub _descend_objects {
     }
     return $objects;
 } # _descend_objects()
+
+sub _unchecked_box {
+    my ($object) = @_;
+
+    return ($object->{type} =~ /^\[_\]$/);
+} # _unchecked_box()
 
 sub _write_object {
     my ($object,$indent,$outfh) = @_;

@@ -20,6 +20,17 @@ ok(0 == diff_files('t/otl/TODO.otl','t/otl/TODO.otl-out'),'compare read and writ
 
 unlink 't/otl/TODO.otl-out';
 
+# test detection of checkboxes
+#
+my $ub = $votl->{objects}->[0];
+my $cb = $votl->{objects}->[0]->{children}->[2];
+
+ok(App::VOJournal::VOTL::_unchecked_box($ub),'unchecked box');
+ok(! App::VOJournal::VOTL::_unchecked_box($cb),'not unchecked box');
+
+ok(App::VOJournal::VOTL::_checked_box($cb),'checked box');
+ok(! App::VOJournal::VOTL::_checked_box($ub),'not checked box');
+
 done_testing;
 
 sub diff_files {
