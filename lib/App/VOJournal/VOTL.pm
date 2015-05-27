@@ -32,6 +32,9 @@ use version; our $VERSION = qv('0.2.0');
     $votl->read_file($infilename);
 
     $votl->write_file($outfilename);
+    $votl->write_file($outfilename, \&filter);
+
+    $votl->write_file_no_checked_boxes($outfilename);
 
 =head1 SUBROUTINES/METHODS
 
@@ -102,18 +105,37 @@ Writes a vimoutliner file.
 
     $votl->write_file( $filename );
 
+    sub filter { ... }
+
+    $votl->write_file( $filename, \&filter);
+
 =cut
 
 sub write_file {
-    my ($self,$filename) = @_;
+    my ($self,$filename,$filter) = @_;
 
     if (open my $output, '>', $filename) {
         foreach my $object (@{$self->{objects}}) {
-            _write_object($object,0,$output);
+            _write_object($object,0,$output,$filter);
         }
         close $output;
     }
 } # write_file()
+
+=head2 write_file_no_checked_boxes
+
+    $votl->write_file_no_checked_boxes( $filename );
+
+=cut
+
+sub write_file_no_checked_boxes {
+    my ($self,$filename) = @_;
+    my $filter = sub {
+        my ($object) = @_;
+        return ! _checked_box($object);
+    };
+    $self->write_file( $filename, $filter );
+} # write_file_no_checked_boxes()
 
 sub _add_something {
     my ($self,$tabs,$newobject) = @_;
@@ -155,12 +177,15 @@ sub _unchecked_box {
 } # _unchecked_box()
 
 sub _write_object {
-    my ($object,$indent,$outfh) = @_;
+    my ($object,$indent,$outfh, $filter) = @_;
 
+    if (defined $filter) {
+        return unless ($filter->($object,$indent));
+    }
     print $outfh "\t" x $indent, $object->{type}, $object->{value}, "\n";
 
     foreach my $co (@{$object->{children}}) {
-        _write_object($co,$indent + 1,$outfh);
+        _write_object($co,$indent + 1,$outfh,$filter);
     }
 } # _write_object()
 
