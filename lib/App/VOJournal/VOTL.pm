@@ -35,6 +35,7 @@ use version; our $VERSION = qv('0.2.0');
     $votl->write_file($outfilename, \&filter);
 
     $votl->write_file_no_checked_boxes($outfilename);
+    $votl->write_file_unchecked_boxes($outfilename);
 
 =head1 SUBROUTINES/METHODS
 
@@ -124,7 +125,12 @@ sub write_file {
 
 =head2 write_file_no_checked_boxes
 
+Writes a vimoutliner file that contains no checked boxes.
+
     $votl->write_file_no_checked_boxes( $filename );
+
+This is a convenience function using C<<write_file()>> and a predifined
+filter.
 
 =cut
 
@@ -136,6 +142,27 @@ sub write_file_no_checked_boxes {
     };
     $self->write_file( $filename, $filter );
 } # write_file_no_checked_boxes()
+
+=head2 write_file_unchecked_boxes
+
+Writes a vimoutliner file that only consists of unchecked boxes at level
+zero and their descendants.
+
+    $votl->write_file_unchecked_boxes( $filename );
+
+This is a convenience function using C<<write_file()>> and a predifined
+filter.
+
+=cut
+
+sub write_file_unchecked_boxes {
+    my ($self,$filename) = @_;
+    my $filter = sub {
+        my ($object,$indent) = @_;
+        return $indent ? 1 : _unchecked_box($object);
+    };
+    $self->write_file( $filename, $filter );
+} # write_file_unchecked_boxes()
 
 sub _add_something {
     my ($self,$tabs,$newobject) = @_;
