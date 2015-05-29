@@ -1,4 +1,4 @@
-[_] 66% bring forward empty checkboxes
+[_] 64% bring forward empty checkboxes
 	: Before the start of vim look if there are older files, if so open the
 	: most recent and copy empty checkboxes to the new file.
 	[X] read a vimoutliner file
@@ -14,7 +14,7 @@
 		[X] method
 		[X] test
 	[_] find the most recent older file
-		[_] method
+		[X] method
 		[_] test
 	[_] document App::VOJournal::VOTL
 		: description of format

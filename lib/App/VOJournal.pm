@@ -6,6 +6,8 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
+use App::VOJournal::VOTL;
+use File::Find;
 use Getopt::Long qw(GetOptionsFromArray);
 
 =head1 NAME
@@ -51,14 +53,23 @@ sub run {
 	my $opt = _initialize(@ARGV);
 
 	my $basedir = $opt->{basedir};
-    my $vim     = $opt->{vim};
+    my $editor  = $opt->{editor};
 
     my ($day,$month,$year) = _determine_date($opt);
 
     my $path = sprintf("%s/%4.4d/%2.2d/%4.4d%2.2d%2.2d.otl",
                        $basedir, $year, $month, $year, $month, $day);
     _make_dir($path);
-    system($vim, $path);
+    if ($opt->{resume}) {
+        my $last_file = _find_last_file($basedir,$path);
+        if ($last_file
+            && $last_file cmp $path) {
+            my $votl = App::VOJournal::VOTL->new();
+            $votl->read_file($last_file);
+            $votl->write_file_unchecked_boxes($path);
+        }
+    }
+    system($editor, $path);
     return $?;
 } # run()
 
@@ -90,7 +101,40 @@ sub _determine_date {
     return ($day,$month,$year);
 } # _determine_date()
 
+sub _find_files_with_pattern {
+    my ($dirname,$pattern) = @_;
+    my @files = ();
+
+    if (opendir(my $DIR,$dirname)) {
+        while (defined(my $file = readdir($DIR))) {
+            push(@files,$file) if ($file =~ /$pattern/);
+        }
+        closedir($DIR);
+    }
+    return @files;
+} # _find_files_with_pattern
+
+sub _find_last_file {
+    my ($basedir,$next_file) = @_;
+    my $last_file = '';
+    my $wanted = sub {
+        my $this_file = $File::Find::name;
+        if ($this_file =~ qr|^$basedir/\d{4}/\d{2}/\d{8}[.]otl$|
+            && 0 < ($this_file cmp $last_file)
+            && 0 >= ($this_file cmp $next_file)) {
+            $last_file = $this_file;
+        }
+    };
+    find($wanted,$basedir);
+    return $last_file;
+} # _find_last_file()
+
 =head1 COMMANDLINE OPTIONS
+
+=head2 --[no]resume
+
+Look for open checkboxes in the last journal file and carry them forward
+to this days journal file before opening this days file.
 
 =head2 --date [YYYY[MM]]DD
 
@@ -116,9 +160,11 @@ sub _initialize {
 	my @argv = @_;
 	my $opt = {
         'basedir'   => qq($ENV{HOME}/journal),
-        'vim'       => 'vim',
+        'editor'    => 'vim',
 	};
     my @optdesc = (
+        'editor=s',
+        'resume!',
         'date=i',
     );
     GetOptionsFromArray(\@argv,$opt,@optdesc);
