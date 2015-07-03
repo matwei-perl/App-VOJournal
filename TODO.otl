@@ -1,4 +1,4 @@
-[_] 64% bring forward empty checkboxes
+[_] 92% bring forward empty checkboxes
 	: Before the start of vim look if there are older files, if so open the
 	: most recent and copy empty checkboxes to the new file.
 	[X] read a vimoutliner file
@@ -16,6 +16,11 @@
 	[_] find the most recent older file
 		[X] method
 		[_] test
-	[_] document App::VOJournal::VOTL
+	[X] document App::VOJournal::VOTL
 		: description of format
-	[_] document command line option
+	[X] document command line option
+[X] Start with date in first line
+[_] Use configuration file
+	: $HOME/.vojournal.conf
+[X] Different basedir via command line
+[_] Allow symlink as basedir

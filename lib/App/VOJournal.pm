@@ -12,15 +12,15 @@ use Getopt::Long qw(GetOptionsFromArray);
 
 =head1 NAME
 
-App::VOJournal - The great new App::VOJournal!
+App::VOJournal - call Vimoutline on a journal file.
 
 =head1 VERSION
 
-Version 0.2.0
+Version 0.4.1
 
 =cut
 
-use version; our $VERSION = qv('0.2.0');
+use version; our $VERSION = qv('0.4.1');
 
 =head1 SYNOPSIS
 
@@ -59,15 +59,27 @@ sub run {
 
     my $path = sprintf("%s/%4.4d/%2.2d/%4.4d%2.2d%2.2d.otl",
                        $basedir, $year, $month, $year, $month, $day);
+    my $header = sprintf('; %4.4d-%2.2d-%2.2d',$year,$month,$day);
+
     _make_dir($path);
     if ($opt->{resume}) {
         my $last_file = _find_last_file($basedir,$path);
         if ($last_file
             && $last_file cmp $path) {
             my $votl = App::VOJournal::VOTL->new();
-            $votl->read_file($last_file);
-            $votl->write_file_unchecked_boxes($path);
+            $votl->read_file_unchecked_boxes($last_file);
+            if ($opt->{header}) {
+                $votl->insert_line(0,$header);
+            }
+            $votl->write_file($path);
         }
+    }
+    else {
+        my $votl = App::VOJournal::VOTL->new();
+        if ($opt->{header}) {
+            $votl->insert_line(0,$header);
+        }
+        $votl->write_file($path);
     }
     system($editor, $path);
     return $?;
@@ -131,14 +143,9 @@ sub _find_last_file {
 
 =head1 COMMANDLINE OPTIONS
 
-=head2 --[no]resume
-
-Look for open checkboxes in the last journal file and carry them forward
-to this days journal file before opening this days file.
-
 =head2 --date [YYYY[MM]]DD
 
-Use a different date as today.
+Use a different date than today.
 
 One or two digits change the day in the current month.
 
@@ -150,6 +157,26 @@ The program will not test for a valid date. That means, if you specify
 '--date 0230' on the command line, the file for February 30th this year
 would be opened.
 
+=head2 --editor $path_to_editor
+
+Use this option to specify an editor other than C<vim> to edit
+the journal file.
+
+=head2 --[no]header
+
+Normally every journal file starts with some header lines, indicating the
+day the journal is written.
+
+If the option C<--noheader> is given on the command line, this header lines
+will be omitted.
+
+=head2 --[no]resume
+
+Look for open checkboxes in the last journal file and carry them forward
+to this days journal file before opening it.
+
+This only works if there is no journal file for this day.
+
 =cut
 
 # _initialize(@ARGV)
@@ -159,13 +186,16 @@ would be opened.
 sub _initialize {
 	my @argv = @_;
 	my $opt = {
-        'basedir'   => qq($ENV{HOME}/journal),
-        'editor'    => 'vim',
+        'basedir' => qq($ENV{HOME}/journal),
+        'editor'  => 'vim',
+        'header'  => 1,
 	};
     my @optdesc = (
-        'editor=s',
-        'resume!',
+        'basedir=s',
         'date=i',
+        'editor=s',
+        'header!',
+        'resume!',
     );
     GetOptionsFromArray(\@argv,$opt,@optdesc);
 	return $opt;

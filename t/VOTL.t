@@ -26,9 +26,7 @@ unlink 't/otl/TODO.otl-out';
 
 $votl->write_file_no_checked_boxes('t/otl/TODO.otl-out');
 
-ok(0 == diff_files('t/otl/TODO-unchecked.otl','t/otl/TODO.otl-out'),'compare unchecked file');
-
-unlink 't/otl/TODO.otl-out';
+ok(0 == diff_files('t/otl/TODO-unchecked.otl','t/otl/TODO.otl-out'),'write unchecked file');
 
 # !!! The following test work with undocumented internal functions.
 # You may have a look at these tests to understand the working of the
@@ -47,6 +45,34 @@ ok(! App::VOJournal::VOTL::_unchecked_box($cb),'not unchecked box');
 
 ok(App::VOJournal::VOTL::_checked_box($cb),'checked box');
 ok(! App::VOJournal::VOTL::_checked_box($ub),'not checked box');
+
+unlink 't/otl/TODO.otl-out';
+
+$votl = App::VOJournal::VOTL->new();
+$votl->read_file_no_checked_boxes('t/otl/TODO.otl');
+$votl->write_file('t/otl/TODO.otl-out');
+
+ok(0 == diff_files('t/otl/TODO-unchecked.otl','t/otl/TODO.otl-out'),'read file unchecked');
+
+# Test inserting objects
+my $object;
+
+$votl = App::VOJournal::VOTL->new();
+
+ok(!defined ($object = $votl->fetch_line(0)), 'fetch in empty VOTL');
+
+$votl->insert_line(3, 'number three');
+
+
+$object = $votl->fetch_line(0);
+ok(0 == ('number three' cmp $object), 'fetch the first');
+$object = $votl->fetch_line(-1);
+ok(0 == ('number three' cmp $object), 'fetch the last');
+$object = $votl->fetch_line(1);
+ok(!defined $object,                  'fetch non existant');
+
+$votl->delete_line(0);
+ok(!defined ($object = $votl->fetch_line(0)), 'fetch in emptied VOTL');
 
 # finished the testing
 #

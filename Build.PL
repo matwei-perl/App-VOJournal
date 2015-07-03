@@ -19,8 +19,7 @@ my $builder = Module::Build->new(
     module_name         => 'App::VOJournal',
     release_status      => 'stable',
     requires => {
-        #'ABC'              => 1.6,
-        #'Foo::Bar::Module' => 5.0401,
+        'Getopt::Long'		=> 2.38,
     },
     script_files	=> [
     	'bin/vojournal'
