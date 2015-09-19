@@ -16,7 +16,11 @@ use warnings FATAL => 'all';
 use Test::More;
 use File::Path qw(make_path remove_tree);
 
-if ('MSWin32' eq $^O) { # man perlport
+eval "use Probe::Perl";
+if ($@) {
+	plan skip_all => 'Probe::Perl required for testing the script';
+}
+elsif ('MSWin32' eq $^O) { # man perlport
 	plan skip_all => qq(Script is not usable on $^O);
 }
 else {
@@ -27,6 +31,7 @@ my $basedir = 't/testbase';
 my $journaldir = "$basedir/2015/02";
 my $journalfile = "$journaldir/20150231.otl";
 my $oldjournalfile = "$journaldir/20150230.otl";
+my $perl = Probe::Perl->find_perl_interpreter;
 my $script  = 'bin/vojournal';
 my @scriptopts = (
 	"--basedir=$basedir",
@@ -40,41 +45,41 @@ diag("Testing #107065: Overwrites journal when called without '--resume'");
 # first check: with option '--resume', no last file
 #
 setup();
-$line = read_pipe('perl', '-Ilib', $script, @scriptopts, '--resume');
+$line = read_pipe($perl, '-Ilib', $script, @scriptopts, '--resume');
 like($line, qr/^; 2015-02-31$/, "with --resume");
 
 # second check: without option '--resume', no last file
 #
 setup();
-$line = read_pipe('perl', '-Ilib', $script, @scriptopts);
+$line = read_pipe($perl, '-Ilib', $script, @scriptopts);
 like($line, qr/^; 2015-02-31$/, "without --resume");
 
 # third check: with option '--resume', last file from same day
 #
 setup();
 print_to("$journalfile","Test");
-$line = read_pipe('perl', '-Ilib', $script, @scriptopts, '--resume');
+$line = read_pipe($perl, '-Ilib', $script, @scriptopts, '--resume');
 like($line, qr/^Test$/, "with --resume");
 
 # fourth check: without option '--resume', last file from same day
 #
 setup();
 print_to("$journalfile","Test");
-$line = read_pipe('perl', '-Ilib', $script, @scriptopts);
+$line = read_pipe($perl, '-Ilib', $script, @scriptopts);
 like($line, qr/^Test$/, "without --resume");
 
 # fifth check: with option '--resume', last file from older day
 #
 setup();
 print_to("$oldjournalfile","[x] a\n[_] b");
-$line = read_pipe('perl', '-Ilib', $script, @scriptopts, '--resume');
+$line = read_pipe($perl, '-Ilib', $script, @scriptopts, '--resume');
 like($line, qr/^; 2015-02-31.\[_] b$/s, "with --resume");
 
 # sixth check: without option '--resume', last file from older day
 #
 setup();
 print_to("$oldjournalfile","[x] a\n[_] b");
-$line = read_pipe('perl', '-Ilib', $script, @scriptopts);
+$line = read_pipe($perl, '-Ilib', $script, @scriptopts);
 like($line, qr/^; 2015-02-31$/, "without --resume");
 
 teardown();

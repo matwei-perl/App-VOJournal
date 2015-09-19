@@ -1,5 +1,9 @@
 Revision history for App-VOJournal
 
+v0.4.3  2015-09-19/11:50
+	- t/bug-107065.t: use Probe::Perl to get same Perl for script
+	- t/VOTL.pm: unlink temporary file after testing
+
 v0.4.2	2015-09-16/10:07
 	- fixed bug #107065, added regression tests
 	- added command line options '--version'

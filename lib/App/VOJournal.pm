@@ -17,11 +17,11 @@ App::VOJournal - call Vimoutline on a journal file.
 
 =head1 VERSION
 
-Version 0.4.1
+Version 0.4.3
 
 =cut
 
-use version; our $VERSION = qv('0.4.2');
+use version; our $VERSION = qv('0.4.3');
 
 =head1 SYNOPSIS
 

@@ -74,6 +74,8 @@ ok(!defined $object,                  'fetch non existant');
 $votl->delete_line(0);
 ok(!defined ($object = $votl->fetch_line(0)), 'fetch in emptied VOTL');
 
+unlink 't/otl/TODO.otl-out';
+
 # finished the testing
 #
 done_testing;

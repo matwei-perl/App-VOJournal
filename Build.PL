@@ -19,7 +19,8 @@ my $builder = Module::Build->new(
     module_name         => 'App::VOJournal',
     release_status      => 'stable',
     requires => {
-        'Getopt::Long'		=> 2.38,
+        'Getopt::Long'	=> 2.38,
+		'version'		=> 0,
     },
     script_files	=> [
     	'bin/vojournal'
