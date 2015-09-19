@@ -1,3 +1,6 @@
+[X] 100% Bug #107065: Overwrites journal when called without '--resume'
+	[X] add test
+	[X] resolve bug
 [_] 92% bring forward empty checkboxes
 	: Before the start of vim look if there are older files, if so open the
 	: most recent and copy empty checkboxes to the new file.

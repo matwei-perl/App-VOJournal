@@ -1,5 +1,10 @@
 Revision history for App-VOJournal
 
+v0.4.2	2015-09-16/10:07
+	- fixed bug #107065, added regression tests
+	- added command line options '--version'
+	- documented options '--basedir' and '--version'
+
 v0.4.1  2015-07-03/10:06
 	- fixed a bug that caused an access to an unitialized value
 

@@ -8,6 +8,7 @@ use warnings FATAL => 'all';
 
 use App::VOJournal::VOTL;
 use File::Find;
+use File::Path qw(make_path);
 use Getopt::Long qw(GetOptionsFromArray);
 
 =head1 NAME
@@ -20,7 +21,7 @@ Version 0.4.1
 
 =cut
 
-use version; our $VERSION = qv('0.4.1');
+use version; our $VERSION = qv('0.4.2');
 
 =head1 SYNOPSIS
 
@@ -52,38 +53,60 @@ vimoutliner with the journal file for that date.
 sub run {
 	my $opt = _initialize(@ARGV);
 
+    if ($opt->{version}) {
+        print "App::VOJournal version $VERSION\n";
+        return 0;
+    }
+
 	my $basedir = $opt->{basedir};
     my $editor  = $opt->{editor};
 
     my ($day,$month,$year) = _determine_date($opt);
 
+    my $dir = sprintf("%s/%4.4d/%2.2d",
+                       $basedir, $year, $month);
     my $path = sprintf("%s/%4.4d/%2.2d/%4.4d%2.2d%2.2d.otl",
                        $basedir, $year, $month, $year, $month, $day);
     my $header = sprintf('; %4.4d-%2.2d-%2.2d',$year,$month,$day);
 
-    _make_dir($path);
-    if ($opt->{resume}) {
-        my $last_file = _find_last_file($basedir,$path);
-        if ($last_file
-            && $last_file cmp $path) {
-            my $votl = App::VOJournal::VOTL->new();
-            $votl->read_file_unchecked_boxes($last_file);
-            if ($opt->{header}) {
-                $votl->insert_line(0,$header);
+    my $last_file = _find_last_file($basedir,$path);
+
+    make_path($dir);
+
+    if ($last_file) {
+        if ($last_file cmp $path) {
+            if ($opt->{resume}) {
+                _use_last_file($path,$last_file,$opt,$header);
             }
-            $votl->write_file($path);
+            else {
+                _create_new_file($path,$opt,$header);
+            }
         }
     }
     else {
-        my $votl = App::VOJournal::VOTL->new();
-        if ($opt->{header}) {
-            $votl->insert_line(0,$header);
+        _create_new_file($path,$opt,$header);
+    }
+    if ($opt->{resume}) {
+        if ($last_file
+            && $last_file cmp $path) {
         }
-        $votl->write_file($path);
     }
     system($editor, $path);
     return $?;
 } # run()
+
+# _create_new_file($path,$opt,$header)
+#
+# Creates a new vimoutliner file at $path optionally containing a header
+# line.
+sub _create_new_file {
+    my ($path,$opt,$header) = @_;
+    my $votl = App::VOJournal::VOTL->new();
+    if ($opt->{header}) {
+        $votl->insert_line(0,$header);
+    }
+    $votl->write_file($path);
+} # _create_new_file()
 
 # _determine_date($opt)
 #
@@ -141,7 +164,22 @@ sub _find_last_file {
     return $last_file;
 } # _find_last_file()
 
+sub _use_last_file {
+    my ($path,$last_file,$opt,$header) = @_;
+    my $votl = App::VOJournal::VOTL->new();
+    $votl->read_file_unchecked_boxes($last_file);
+    if ($opt->{header}) {
+        $votl->insert_line(0,$header);
+    }
+    $votl->write_file($path);
+} # _use_old_file
+
 =head1 COMMANDLINE OPTIONS
+
+=head2 --basedir $dir
+
+Use C<< $dir >> instead of C<< $ENV{HOME}/journal >> as base directory for
+the journal files.
 
 =head2 --date [YYYY[MM]]DD
 
@@ -177,6 +215,10 @@ to this days journal file before opening it.
 
 This only works if there is no journal file for this day.
 
+=head2 --version
+
+Print the version number and exit.
+
 =cut
 
 # _initialize(@ARGV)
@@ -196,36 +238,11 @@ sub _initialize {
         'editor=s',
         'header!',
         'resume!',
+        'version',
     );
     GetOptionsFromArray(\@argv,$opt,@optdesc);
 	return $opt;
 } # _initialize()
-
-# _make_dir($path)
-#
-# verify that all directories up to the last '/' in $path exist and
-# create the missing directories.
-#
-# May die, if unable to create a directory.
-#
-sub _make_dir {
-    my ($path) = @_;
-
-    my $dir = '';
-
-    while ($path =~ s{^([^/]*)/}{}) {
-        if ($1) {
-            $dir .= $1;
-            (-d $dir)
-             || mkdir($dir, 0777)
-             || die qq(can't mkdir $dir);
-            $dir .= '/';
-        }
-        else {
-            $dir = '/' unless ($dir);
-        }
-    }
-} # _make_dir()
 
 =head1 AUTHOR
 
