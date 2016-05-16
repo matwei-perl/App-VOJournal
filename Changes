@@ -1,5 +1,9 @@
 Revision history for App-VOJournal
 
+v0.4.4  2016-05-16/04:03
+	- option '--resume' is now default
+	- fixed version numbers
+
 v0.4.3  2015-09-19/11:50
 	- t/bug-107065.t: use Probe::Perl to get same Perl for script
 	- t/VOTL.pm: unlink temporary file after testing

@@ -37,6 +37,7 @@ my @scriptopts = (
 	"--basedir=$basedir",
 	'--date=20150231',
 	'--editor=cat',
+	'--noresume',	# 20160516: must add --noresume, since --resume is default
 );
 my $line;
 

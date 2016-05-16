@@ -17,11 +17,11 @@ App::VOJournal - call Vimoutline on a journal file.
 
 =head1 VERSION
 
-Version 0.4.3
+Version 0.4.4
 
 =cut
 
-use version; our $VERSION = qv('0.4.3');
+use version; our $VERSION = qv('0.4.4');
 
 =head1 SYNOPSIS
 
@@ -215,6 +215,8 @@ to this days journal file before opening it.
 
 This only works if there is no journal file for this day.
 
+The default is C<< --resume >>
+
 =head2 --version
 
 Print the version number and exit.
@@ -231,6 +233,7 @@ sub _initialize {
         'basedir' => qq($ENV{HOME}/journal),
         'editor'  => 'vim',
         'header'  => 1,
+        'resume'  => 1,
 	};
     my @optdesc = (
         'basedir=s',

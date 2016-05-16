@@ -19,6 +19,9 @@ my $builder = Module::Build->new(
     module_name         => 'App::VOJournal',
     release_status      => 'stable',
     requires => {
+        # Perl 5.10.1 includes "configure_requires" support
+        #             (see: Module::Build::Compat)
+        'perl'          => '5.10.1',
         'Getopt::Long'	=> 2.38,
 		'version'		=> 0,
     },
