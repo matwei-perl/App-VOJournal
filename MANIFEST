@@ -1,0 +1,19 @@
+bin/vojournal
+Build.PL
+Changes
+lib/App/VOJournal.pm
+lib/App/VOJournal/VOTL.pm
+MANIFEST			This list of files
+README
+t/00-load.t
+t/boilerplate.t
+t/bug-107065.t
+t/manifest.t
+t/otl/TODO-unchecked.otl
+t/otl/TODO.otl
+t/pod-coverage.t
+t/pod.t
+t/VOTL.t
+Makefile.PL
+META.yml
+META.json

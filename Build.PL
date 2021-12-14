@@ -18,7 +18,7 @@ my $builder = Module::Build->new(
     license             => 'Artistic_2_0',
     meta_merge => {
         resources => {
-            repository => 'https://github.com/matwei/perl-App-VOJournal',
+            repository => 'https://github.com/matwei-perl/App-VOJournal',
             bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=App-VOJournal',
         }
     },
