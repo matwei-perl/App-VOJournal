@@ -1,5 +1,8 @@
 Revision history for App-VOJournal
 
+v0.4.5  2016-05-16/16:03
+	- fixed version strings
+
 v0.4.4  2016-05-16/04:03
 	- option '--resume' is now default
 	- fixed version numbers
