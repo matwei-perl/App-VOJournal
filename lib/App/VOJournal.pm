@@ -1,28 +1,31 @@
 package App::VOJournal;
 
-# vim: set sw=4 ts=4:
+# vim: set sw=4 ts=4 tw=76 et ai si:
 
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
+use App::VOJournal::VOTL;
+use File::Find;
+use File::Path qw(make_path);
+use Getopt::Long qw(GetOptionsFromArray);
+
 =head1 NAME
 
-App::VOJournal - The great new App::VOJournal!
+App::VOJournal - call Vimoutline on a journal file.
 
 =head1 VERSION
 
-Version 0.1.0
+Version v0.4.5
 
 =cut
 
-use version; our $VERSION = qv('0.1.0');
+use version; our $VERSION = qv('v0.4.5');
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
+Open a file in vimoutliner to write a journal
 
     use App::VOJournal;
 
@@ -30,60 +33,219 @@ Perhaps a little code snippet.
 
 or, on the command line
 
-  perl -MApp::VOJournal -e App::VOJournal->run
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+    perl -MApp::VOJournal -e App::VOJournal->run
 
 =head1 SUBROUTINES/METHODS
 
 =head2 run
 
+This is the only function you need to use this Module. It parses the command
+line and determines the date for which you want to write a journal entry.
+Then it makes sure all necessary directories are created and starts
+vimoutliner with the journal file for that date.
+
+    use App::VOJournal;
+
+    App::VOJournal->run;
+
 =cut
 
 sub run {
-    my $basedir = qq($ENV{HOME}/journal);
-    my $vim = 'vim';
+	my $opt = _initialize(@ARGV);
 
-    my ($day,$month,$year) = (localtime)[3,4,5];
+    if ($opt->{version}) {
+        print "App::VOJournal version $VERSION\n";
+        return 0;
+    }
 
-    $year += 1900;
-    $month += 1;
+	my $basedir = $opt->{basedir};
+    my $editor  = $opt->{editor};
 
+    my ($day,$month,$year) = _determine_date($opt);
+
+    my $dir = sprintf("%s/%4.4d/%2.2d",
+                       $basedir, $year, $month);
     my $path = sprintf("%s/%4.4d/%2.2d/%4.4d%2.2d%2.2d.otl",
                        $basedir, $year, $month, $year, $month, $day);
-    _make_dir($path);
-    system($vim, $path);
+    my $header = sprintf('; %4.4d-%2.2d-%2.2d',$year,$month,$day);
+
+    my $last_file = _find_last_file($basedir,$path);
+
+    make_path($dir);
+
+    if ($last_file) {
+        if ($last_file cmp $path) {
+            if ($opt->{resume}) {
+                _use_last_file($path,$last_file,$opt,$header);
+            }
+            else {
+                _create_new_file($path,$opt,$header);
+            }
+        }
+    }
+    else {
+        _create_new_file($path,$opt,$header);
+    }
+    if ($opt->{resume}) {
+        if ($last_file
+            && $last_file cmp $path) {
+        }
+    }
+    system($editor, $path);
     return $?;
 } # run()
 
-# _make_dir($path)
+# _create_new_file($path,$opt,$header)
 #
-# verify that all directories up to the last '/' in $path exist and
-# create the missing directories.
-#
-# May die, if unable to create a directory.
-#
-sub _make_dir {
-    my ($path) = @_;
+# Creates a new vimoutliner file at $path optionally containing a header
+# line.
+sub _create_new_file {
+    my ($path,$opt,$header) = @_;
+    my $votl = App::VOJournal::VOTL->new();
+    if ($opt->{header}) {
+        $votl->insert_line(0,$header);
+    }
+    $votl->write_file($path);
+} # _create_new_file()
 
-    my $dir = '';
+# _determine_date($opt)
+#
+# Determines the date respecting the given options.
+#
+sub _determine_date {
+    my ($opt) = @_;
+    my ($day,$month,$year) = (localtime)[3,4,5];
+    $year += 1900;
+    $month += 1;
 
-    while ($path =~ s{^([^/]*)/}{}) {
-        if ($1) {
-            $dir .= $1;
-            (-d $dir)
-             || mkdir($dir, 0777)
-             || die qq(can't mkdir $dir);
-            $dir .= '/';
+    if (my $od = $opt->{date}) {
+        if ($od =~ /^\d{1,2}$/) {
+            $day = $od;
         }
-        else {
-            $dir = '/' unless ($dir);
+        elsif ($od =~ /^(\d{1,2})(\d{2})$/) {
+            $month = $1;
+            $day   = $2;
+        }
+        elsif ($od =~ /^(\d{4})(\d{2})(\d{2})$/) {
+            $year  = $1;
+            $month = $2;
+            $day   = $3;
         }
     }
-} # _make_dir()
+
+    return ($day,$month,$year);
+} # _determine_date()
+
+sub _find_files_with_pattern {
+    my ($dirname,$pattern) = @_;
+    my @files = ();
+
+    if (opendir(my $DIR,$dirname)) {
+        while (defined(my $file = readdir($DIR))) {
+            push(@files,$file) if ($file =~ /$pattern/);
+        }
+        closedir($DIR);
+    }
+    return @files;
+} # _find_files_with_pattern
+
+sub _find_last_file {
+    my ($basedir,$next_file) = @_;
+    my $last_file = '';
+    my $wanted = sub {
+        my $this_file = $File::Find::name;
+        if ($this_file =~ qr|^$basedir/\d{4}/\d{2}/\d{8}[.]otl$|
+            && 0 < ($this_file cmp $last_file)
+            && 0 >= ($this_file cmp $next_file)) {
+            $last_file = $this_file;
+        }
+    };
+    find($wanted,$basedir);
+    return $last_file;
+} # _find_last_file()
+
+sub _use_last_file {
+    my ($path,$last_file,$opt,$header) = @_;
+    my $votl = App::VOJournal::VOTL->new();
+    $votl->read_file_unchecked_boxes($last_file);
+    if ($opt->{header}) {
+        $votl->insert_line(0,$header);
+    }
+    $votl->write_file($path);
+} # _use_old_file
+
+=head1 COMMANDLINE OPTIONS
+
+=head2 --basedir $dir
+
+Use C<< $dir >> instead of C<< $ENV{HOME}/journal >> as base directory for
+the journal files.
+
+=head2 --date [YYYY[MM]]DD
+
+Use a different date than today.
+
+One or two digits change the day in the current month.
+
+Three or four digits change the day and month in the current year.
+
+Eight digits change day, month and year.
+
+The program will not test for a valid date. That means, if you specify
+'--date 0230' on the command line, the file for February 30th this year
+would be opened.
+
+=head2 --editor $path_to_editor
+
+Use this option to specify an editor other than C<vim> to edit
+the journal file.
+
+=head2 --[no]header
+
+Normally every journal file starts with some header lines, indicating the
+day the journal is written.
+
+If the option C<--noheader> is given on the command line, this header lines
+will be omitted.
+
+=head2 --[no]resume
+
+Look for open checkboxes in the last journal file and carry them forward
+to this days journal file before opening it.
+
+This only works if there is no journal file for this day.
+
+The default is C<< --resume >>
+
+=head2 --version
+
+Print the version number and exit.
+
+=cut
+
+# _initialize(@ARGV)
+#
+# Parse the command line and initialize the program
+#
+sub _initialize {
+	my @argv = @_;
+	my $opt = {
+        'basedir' => qq($ENV{HOME}/journal),
+        'editor'  => 'vim',
+        'header'  => 1,
+        'resume'  => 1,
+	};
+    my @optdesc = (
+        'basedir=s',
+        'date=i',
+        'editor=s',
+        'header!',
+        'resume!',
+        'version',
+    );
+    GetOptionsFromArray(\@argv,$opt,@optdesc);
+	return $opt;
+} # _initialize()
 
 =head1 AUTHOR
 

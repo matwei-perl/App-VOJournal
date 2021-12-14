@@ -74,3 +74,5 @@
 
 \.mtn-ignore$
 \b_MTN
+^TODO.otl$
+\.swp$

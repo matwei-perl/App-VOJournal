@@ -1,0 +1,13 @@
+^App-VOJournal-v[0-9]+
+^blib/
+^blib$
+^_build/
+^_build$
+^Build$
+^Makefile$
+^Makefile\.PL$
+^MANIFEST$
+^META\.json$
+^META\.yml$
+^MYMETA\.json$
+^MYMETA\.yml$
