@@ -14,3 +14,6 @@ t/otl/TODO.otl
 t/pod-coverage.t
 t/pod.t
 t/VOTL.t
+Makefile.PL
+META.yml
+META.json
