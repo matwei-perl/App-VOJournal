@@ -1,14 +1,15 @@
 App-VOJournal-v[0-9]*
 blib
-Build
 _build
+Build
 Makefile
 Makefile.PL
 MANIFEST.bak
 MANIFEST.SKIP.bak
 META.json
 META.yml
+_MTN
 MYMETA.json
 MYMETA.yml
+.*\.swp
 t/otl/TODO.otl-out
-_MTN
