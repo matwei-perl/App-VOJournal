@@ -48,6 +48,12 @@ vimoutliner with the journal file for that date.
 
     App::VOJournal->run;
 
+B<Note:> App::VOJournal uses L<File::Find>
+to search for the last journal file
+below the directory given with option C<--basedir>
+(default: C<$ENV{HOME}/journal>) and does not follow symbolic links.
+Please make sure that this path points to a real directory and no symbolic link.
+
 =cut
 
 sub run {
@@ -149,6 +155,11 @@ sub _find_files_with_pattern {
     return @files;
 } # _find_files_with_pattern
 
+# _find_last_file($basedir, $next_file)
+#
+# Find the last journal file that can be used as a template for the next
+# file.
+#
 sub _find_last_file {
     my ($basedir,$next_file) = @_;
     my $last_file = '';
@@ -160,7 +171,26 @@ sub _find_last_file {
             $last_file = $this_file;
         }
     };
-    find($wanted,$basedir);
+    # Concentrate on the files whose path matches the pattern of journal
+    # files and ignore the rest with this preprocess function for
+    # File::Find::find().
+    my $preprocess = sub {
+        my @files = @_;
+        if ($File::Find::dir =~ /^$basedir$/) {
+            @files = grep { /^\d{4}$/ } @_;
+        }
+        elsif ($File::Find::dir =~ m|^$basedir/\d{4}$|) {
+            @files = grep { /^\d{2}$/ } @_;
+        }
+        elsif ($File::Find::dir =~ m|^$basedir/\d{4}/\d{2}$|) {
+            @files = grep { /^\d{8}\.otl$/ } @_;
+        }
+        else {
+            @files = ();
+        }
+        return @files;
+    };
+    find({wanted => $wanted, preprocess => $preprocess},$basedir);
     return $last_file;
 } # _find_last_file()
 
