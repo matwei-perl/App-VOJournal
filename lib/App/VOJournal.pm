@@ -155,28 +155,57 @@ sub _find_files_with_pattern {
     return @files;
 } # _find_files_with_pattern
 
-# _find_last_file($basedir, $next_file)
+# _find_last_file($basedir, $next_file, $f)
 #
 # Find the last journal file that can be used as a template for the next
 # file.
 #
+# $basedir - the start directory
+# $next_file - the name of the file we want to use next
+# $f - optional, a hash with function references to aid testing/debugging
+#
 sub _find_last_file {
-    my ($basedir,$next_file) = @_;
+    my ($basedir,$next_file,$f) = @_;
     my $last_file = '';
+    my $got_it = 0;
     my $wanted = sub {
         my $this_file = $File::Find::name;
+
+        return if ($got_it);
+        #
+        # We get the files in reverse order, therefore the first matching
+        # file is already the one we are looking for.
+        #
+        # If we got the file we signal this with $got_it.
+        #
         if ($this_file =~ qr|^$basedir/\d{4}/\d{2}/\d{8}[.]otl$|
             && 0 < ($this_file cmp $last_file)
             && 0 >= ($this_file cmp $next_file)) {
             $last_file = $this_file;
+            $got_it = 1;
+        }
+        #
+        # The following is only to aid in testing or debugging.
+        #
+        if ($f->{wanted}) {
+            $f->{wanted}->($this_file,$last_file,$next_file,$got_it);
         }
     };
+    #
     # Concentrate on the files whose path matches the pattern of journal
     # files and ignore the rest with this preprocess function for
     # File::Find::find().
+    #
+    # Sort the filenames reverse and ignore all following directory listings
+    # if we have already found the last file;
+    #
     my $preprocess = sub {
-        my @files = @_;
-        if ($File::Find::dir =~ /^$basedir$/) {
+        my @files = ();
+
+        if ($got_it) {
+            # leave it empty
+        }
+        elsif ($File::Find::dir =~ /^$basedir$/) {
             @files = grep { /^\d{4}$/ } @_;
         }
         elsif ($File::Find::dir =~ m|^$basedir/\d{4}$|) {
@@ -185,12 +214,12 @@ sub _find_last_file {
         elsif ($File::Find::dir =~ m|^$basedir/\d{4}/\d{2}$|) {
             @files = grep { /^\d{8}\.otl$/ } @_;
         }
-        else {
-            @files = ();
-        }
-        return @files;
+        return sort {$b cmp $a} @files;
     };
-    find({wanted => $wanted, preprocess => $preprocess},$basedir);
+    find({wanted => $wanted,
+          preprocess => $preprocess,
+          untaint => 1,                 # needed when running in taint mode
+         },$basedir);
     return $last_file;
 } # _find_last_file()
 
