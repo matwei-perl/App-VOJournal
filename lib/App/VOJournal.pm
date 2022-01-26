@@ -17,11 +17,11 @@ App::VOJournal - call Vimoutline on a journal file.
 
 =head1 VERSION
 
-Version v0.4.7
+Version v0.4.8
 
 =cut
 
-use version; our $VERSION = qv('v0.4.7');
+use version; our $VERSION = qv('v0.4.8');
 
 =head1 SYNOPSIS
 
@@ -219,6 +219,7 @@ sub _find_last_file {
     find({wanted => $wanted,
           preprocess => $preprocess,
           untaint => 1,                 # needed when running in taint mode
+          no_chdir => 1,                # we don't need to chdir
          },$basedir);
     return $last_file;
 } # _find_last_file()

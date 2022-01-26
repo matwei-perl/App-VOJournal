@@ -1,5 +1,9 @@
 Revision history for App-VOJournal
 
+v0.4.8 Wed Jan 26 20:25:14 CET 2022
+	- call File::Find::find() with 'no_chdir => 1'
+	  to avoid problems with taint mode on mswin32
+
 v0.4.7 Tue Jan 25 11:05:31 CET 2022
 	- optimize _find_last_file() to easily cope
 	  with thousands of unrelated files below --basedir
